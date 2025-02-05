@@ -1,5 +1,7 @@
 using ContactProject.Repositories.Implementation;
 using ContactProject.Repositories.Interface;
+using ContactProject.Validators;
+using FluentValidation;
 using Npgsql;
 
 
@@ -22,6 +24,8 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterVMValidator>();
 var app = builder.Build();
 
 
@@ -44,6 +48,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=User}/{action=Login}/{id?}");
+    pattern: "{controller=Home}/{action=FRegister}/{id?}");
 
 app.Run();

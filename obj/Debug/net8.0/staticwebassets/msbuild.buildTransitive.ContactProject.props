@@ -1,3 +1,3 @@
 ﻿<Project>
-  <Import Project="..\buildMultiTargeting\ContactProject.props" />
+  <Import Project="../buildMultiTargeting/ContactProject.props" />
 </Project>
