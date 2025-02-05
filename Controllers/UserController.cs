@@ -1,0 +1,94 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+using ContactProject.Models;
+using ContactProject.Repositories.Interface;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+
+namespace ContactProject.Controllers
+{
+    public class UserController : Controller
+    {
+        private readonly IUserInterface reg;
+
+        public UserController(IUserInterface reg)
+        {
+            this.reg = reg;
+        }
+
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Register(t_User user)
+        {
+            if (ModelState.IsValid)
+            {
+                if (user.ProfilePicture != null && user.ProfilePicture.Length > 0)
+                {
+                    // Save the uploaded file 
+                    var fileName = user.c_Email + Path.GetExtension(user.ProfilePicture.FileName);
+                    var filePath = Path.Combine("wwwroot/profile_images", fileName);
+                    Directory.CreateDirectory(Path.Combine("wwwroot/profile_images"));
+                    user.c_Image = fileName;
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        user.ProfilePicture.CopyTo(stream);
+                    }
+                }
+                Console.WriteLine("user.c_fname: " + user.c_UserName);
+                var status = await reg.Register(user);
+                if (status == 1)
+                {
+                    ViewData["message"] = "User Registred";
+                    return RedirectToAction("Index");
+                }
+                else if (status == 0)
+                {
+                    ViewData["message"] = "User Already Registred";
+                }
+                else
+                {
+                    ViewData["message"] = "There was some error while Registration";
+                }
+            }
+            return View();
+        }
+
+        public IActionResult Login()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> Login(vm_Login login)
+        {
+            t_User UserData = await reg.Login(login);
+            if (ModelState.IsValid)
+            {
+                if (UserData.c_UserId != 0)
+                {
+                    HttpContext.Session.SetInt32("UserId", UserData.c_UserId);
+                    HttpContext.Session.SetString("UserName", UserData.c_UserName);
+                    ViewData["message"] = "Login suceesful";
+                    return RedirectToAction("List", "Contact");
+                }
+                else
+                {
+                    ViewData["message"] = "Invalid Username and Password";
+                }
+            }
+            return View(login);
+        }
+    }
+}
